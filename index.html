@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JavaScript — MBD</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Archivo:wght@700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0a0a0a;
+    --panel:#121212;
+    --panel-border:#242424;
+    --red:#ff2d2d;
+    --red-dim:#7a1414;
+    --text:#e6e6e6;
+    --text-dim:#9c9c9c;
+    --text-faint:#6b6b6b;
+    --link:#4da6ff;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:'Inter', sans-serif;
+    font-size:15px;
+    line-height:1.6;
+  }
+  a{color:var(--link); text-decoration:none;}
+  a:hover{text-decoration:underline;}
+
+  /* ===== Layout shell ===== */
+  .shell{ display:grid; grid-template-columns:230px 1fr; min-height:100vh; }
+
+  /* ===== Sidebar ===== */
+  .sidebar{
+    background:var(--bg);
+    border-right:1px solid var(--panel-border);
+    padding:20px 22px;
+  }
+  .sb-top{ display:flex; align-items:center; gap:14px; margin-bottom:26px; }
+  .hamburger{ font-size:20px; color:#ddd; cursor:pointer; line-height:1; padding-top:2px;}
+  .hamburger:hover{ color:var(--red); }
+  .brand{ font-family:'Archivo', sans-serif; font-weight:900; font-size:26px; color:var(--red); letter-spacing:0.5px; }
+  .tagline{ font-size:10.5px; color:var(--text-faint); margin-top:-4px; letter-spacing:0.3px;}
+
+  .sb-section{ margin-bottom:22px; }
+  .sb-heading{
+    color:var(--red); font-size:11px; font-weight:700; letter-spacing:1px;
+    text-transform:uppercase; margin-bottom:8px;
+  }
+  .sb-section ul{ list-style:none; }
+  .sb-section li{ margin-bottom:7px; }
+  .sb-section a{
+    color:#ccc; font-size:13.5px; display:inline-block; position:relative;
+    transition:color .2s ease, transform .2s ease;
+  }
+  .sb-section a::after{
+    content:''; position:absolute; left:0; bottom:-2px; width:0%; height:1px;
+    background:var(--red); transition:width .25s ease;
+  }
+  .sb-section a:hover{ color:var(--red); text-decoration:none; transform:translateX(3px); }
+  .sb-section a:hover::after{ width:100%; }
+
+  .sb-footer{ margin-top:32px; padding-top:16px; border-top:1px solid var(--panel-border);}
+  .sb-footer .brand{ font-size:16px; }
+  .sb-footer p{ font-size:11px; color:var(--text-faint); margin-top:4px; }
+
+  /* ===== Main column ===== */
+  .main{ display:flex; flex-direction:column; }
+
+  /* Top bar */
+  .topbar{
+    display:flex; align-items:center; gap:24px;
+    padding:16px 32px; border-bottom:1px solid var(--panel-border);
+    position:sticky; top:0; background:rgba(10,10,10,0.92); backdrop-filter:blur(6px);
+    z-index:50;
+  }
+  .search-wrap{ flex:1; max-width:460px; margin:0 auto; position:relative; }
+  .search-wrap input{
+    width:100%; background:#161616; border:1px solid #2c2c2c; border-radius:22px;
+    padding:10px 42px 10px 18px; color:#eee; font-size:14px; outline:none;
+    transition:border-color .2s ease, box-shadow .2s ease;
+  }
+  .search-wrap input:focus{ border-color:var(--red); box-shadow:0 0 0 3px rgba(255,45,45,0.15); }
+  .search-wrap .icon{ position:absolute; right:14px; top:50%; transform:translateY(-50%); color:#888; font-size:15px; pointer-events:none;}
+
+  .toggle{
+    width:46px; height:24px; background:var(--red); border-radius:14px; position:relative;
+    cursor:pointer; flex-shrink:0; transition:background .3s ease;
+  }
+  .toggle .knob{
+    width:18px; height:18px; background:#fff; border-radius:50%; position:absolute;
+    top:3px; right:3px; transition:right .3s ease;
+    box-shadow:0 1px 4px rgba(0,0,0,0.4);
+  }
+  .toggle.off{ background:#333; }
+  .toggle.off .knob{ right:25px; }
+
+  /* Article tabs */
+  .tabs-row{
+    display:flex; justify-content:space-between; align-items:center;
+    padding:14px 32px 0 32px; border-bottom:1px solid var(--panel-border);
+  }
+  .tabs-left, .tabs-right{ display:flex; gap:26px; font-size:13.5px; }
+  .tabs-left a, .tabs-right a{ color:var(--text-dim); padding-bottom:12px; display:inline-block; position:relative; }
+  .tabs-left a.active{ color:#fff; }
+  .tabs-left a.active::after{
+    content:''; position:absolute; left:0; bottom:0; width:100%; height:2px; background:var(--red);
+  }
+  .tabs-right a.active{ color:var(--link); }
+  .tabs-right a:hover, .tabs-left a:hover{ color:#fff; text-decoration:none; }
+
+  /* Article body layout */
+  .article-grid{
+    display:grid; grid-template-columns:1fr 300px; gap:28px;
+    padding:28px 32px 60px 32px; align-items:start;
+  }
+
+  .article-head{ display:flex; justify-content:space-between; align-items:baseline; gap:20px; flex-wrap:wrap; margin-bottom:4px;}
+  h1.title{
+    font-family:'Archivo', sans-serif; font-weight:900; font-size:3rem; color:var(--red);
+    letter-spacing:0.5px; position:relative; padding-bottom:16px; opacity:0; transform:translateY(-16px);
+    animation:titleIn .8s ease forwards;
+  }
+  h1.title::after{
+    content:''; position:absolute; left:0; bottom:0; width:60%; height:2px;
+    background:linear-gradient(90deg, var(--red), transparent);
+    box-shadow:0 0 16px 2px rgba(255,45,45,0.6);
+  }
+  @keyframes titleIn{ to{ opacity:1; transform:translateY(0);} }
+  .lang-pill{ color:var(--link); font-size:13.5px; white-space:nowrap; }
+  .from-line{ color:var(--text-faint); font-size:13px; margin:6px 0 20px 0; }
+
+  /* Photo cards */
+  .card{
+    background:var(--panel); border:1px solid var(--panel-border); border-radius:14px;
+    padding:20px; display:flex; gap:20px; align-items:center;
+    opacity:0; transform:translateY(16px);
+    transition:transform .35s ease, box-shadow .35s ease, border-color .35s ease;
+  }
+  .card.reveal{ animation:cardIn .6s ease forwards; }
+  @keyframes cardIn{ to{ opacity:1; transform:translateY(0);} }
+  .card:hover{
+    transform:translateY(-5px);
+    box-shadow:0 16px 32px rgba(255,45,45,0.12);
+    border-color:rgba(255,45,45,0.4);
+  }
+  .card img{
+    width:130px; height:130px; border-radius:10px; object-fit:cover; flex-shrink:0;
+    filter:grayscale(25%) contrast(1.02); transition:filter .4s ease, transform .4s ease;
+  }
+  .card:hover img{ filter:grayscale(0%); transform:scale(1.04); }
+  .card p{ color:#d6d6d6; font-size:14.5px; line-height:1.65; }
+  .card p .hl{ color:var(--red); }
+
+  .hero-card{ margin-bottom:16px; }
+  .hero-card img{ width:220px; height:220px; }
+  .card-grid{ display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+  @media (max-width:760px){ .card-grid{ grid-template-columns:1fr; } .hero-card{ flex-direction:column; align-items:flex-start; } }
+
+  /* Infobox */
+  .infobox{
+    background:var(--panel); border:1px solid var(--panel-border); border-radius:14px;
+    overflow:hidden; opacity:0; transform:translateX(16px);
+    animation:infoIn .7s ease forwards; animation-delay:.15s;
+  }
+  @keyframes infoIn{ to{ opacity:1; transform:translateX(0);} }
+  .infobox-title{
+    text-align:center; color:var(--red); font-weight:700; font-size:15px;
+    padding:14px 0 10px 0; border-bottom:1px solid var(--panel-border);
+  }
+  .infobox-cover{
+    background:radial-gradient(circle at 50% 40%, #4a0d0d 0%, #0a0a0a 75%);
+    display:flex; align-items:center; justify-content:center; padding:34px 0;
+    position:relative; overflow:hidden;
+  }
+  .infobox-cover .mbd-mark{
+    font-family:'Archivo', sans-serif; font-weight:900; font-size:2.6rem; color:var(--red);
+    letter-spacing:3px; text-shadow:0 0 30px rgba(255,45,45,0.7); z-index:2;
+  }
+  .infobox-cover .silhouette{
+    position:absolute; bottom:0; right:38%; width:26px; height:70px;
+    background:#050505; border-radius:8px 8px 0 0; opacity:.85;
+  }
+  .infobox-row{
+    display:grid; grid-template-columns:96px 1fr; gap:10px;
+    padding:11px 16px; border-bottom:1px solid var(--panel-border); font-size:12.5px;
+  }
+  .infobox-row:last-child{ border-bottom:none; }
+  .infobox-row .k{ color:var(--text-dim); }
+  .infobox-row .v{ color:#ddd; }
+  .infobox-row .v a{ display:inline; }
+
+  /* Section headings inside potential future content */
+  h2.section-heading{
+    font-family:'Archivo', sans-serif; font-size:1.5rem; margin:36px 0 14px 0;
+    color:#fff; transition:color .25s ease;
+  }
+  h2.section-heading:hover{ color:var(--red); }
+
+  /* References style (illustrative) */
+  sup.ref{ color:var(--red); font-size:11px; cursor:pointer; transition:transform .2s ease; display:inline-block;}
+  sup.ref:hover{ transform:scale(1.35); }
+
+  ::selection{ background:rgba(255,45,45,0.35); }
+</style>
+</head>
+<body>
+
+<div class="shell">
+
+  <!-- ================= SIDEBAR ================= -->
+  <aside class="sidebar">
+    <div class="sb-top">
+      <span class="hamburger">&#9776;</span>
+      <div>
+        <div class="brand">MBD</div>
+        <div class="tagline">Knowledge. Verified.</div>
+      </div>
+    </div>
+
+    <div class="sb-section">
+      <div class="sb-heading">Main page</div>
+      <ul>
+        <li><a href="#">MBD Home</a></li>
+        <li><a href="#">Community portal</a></li>
+      </ul>
+    </div>
+
+    <div class="sb-section">
+      <div class="sb-heading">Contents</div>
+      <ul>
+        <li><a href="#">Current events</a></li>
+        <li><a href="#">Random article</a></li>
+        <li><a href="#">About MBD</a></li>
+        <li><a href="#">Contact us</a></li>
+        <li><a href="#">Donate</a></li>
+      </ul>
+    </div>
+
+    <div class="sb-section">
+      <div class="sb-heading">Contribute</div>
+      <ul>
+        <li><a href="#">Help</a></li>
+        <li><a href="#">Learn to edit</a></li>
+        <li><a href="#">Community</a></li>
+        <li><a href="#">Recent changes</a></li>
+        <li><a href="#">Upload file</a></li>
+      </ul>
+    </div>
+
+    <div class="sb-section">
+      <div class="sb-heading">Tools</div>
+      <ul>
+        <li><a href="#">What links here</a></li>
+        <li><a href="#">Related changes</a></li>
+        <li><a href="#">Special pages</a></li>
+        <li><a href="#">Permanent link</a></li>
+        <li><a href="#">Page information</a></li>
+        <li><a href="#">Cite this page</a></li>
+        <li><a href="#">Wikidata item</a></li>
+      </ul>
+    </div>
+
+    <div class="sb-section">
+      <div class="sb-heading">Print / export</div>
+      <ul>
+        <li><a href="#">Download as PDF</a></li>
+        <li><a href="#">Printable version</a></li>
+      </ul>
+    </div>
+
+    <div class="sb-footer">
+      <div class="brand">MBD</div>
+      <p>&copy; 2025 MBD Foundation</p>
+    </div>
+  </aside>
+
+  <!-- ================= MAIN ================= -->
+  <div class="main">
+
+    <div class="topbar">
+      <div class="search-wrap">
+        <input id="searchInput" type="text" placeholder="Search MBD" autocomplete="off">
+        <span class="icon">&#128269;</span>
+      </div>
+      <div class="toggle" id="themeToggle"><div class="knob"></div></div>
+    </div>
+
+    <div class="tabs-row">
+      <div class="tabs-left">
+        <a href="#" class="active">Article</a>
+        <a href="#">Talk</a>
+      </div>
+      <div class="tabs-right">
+        <a href="#" class="active">Read</a>
+        <a href="#">View source</a>
+        <a href="#">View history</a>
+        <a href="#">Tools &#9662;</a>
+      </div>
+    </div>
+
+    <div class="article-grid">
+      <!-- LEFT: article content -->
+      <div>
+        <div class="article-head">
+          <h1 class="title">JavaScript</h1>
+          <span class="lang-pill">&#25991;&#65 149 languages &#9662;</span>
+        </div>
+        <p class="from-line">From MBD, the free knowledge platform</p>
+
+        <div class="card hero-card" data-reveal>
+          <img src="https://i.pravatar.cc/300?img=47" alt="">
+          <p>
+            <span class="hl">JavaScript</span> is a programming language and core technology
+            of the Web, alongside <span class="hl">HTML</span> and <span class="hl">CSS</span>.
+            99% of websites use JavaScript on the client side for webpage behavior.
+          </p>
+        </div>
+
+        <div class="card-grid">
+          <div class="card" data-reveal>
+            <img src="https://i.pravatar.cc/300?img=13" alt="">
+            <p>It enables <span class="hl">interactive web pages</span> and is an essential part of web applications.</p>
+          </div>
+          <div class="card" data-reveal>
+            <img src="https://i.pravatar.cc/300?img=52" alt="">
+            <p>Originally developed by <span class="hl">Brendan Eich</span> in 10 days at Netscape, JavaScript has become one of the world's most widely used programming languages.</p>
+          </div>
+          <div class="card" data-reveal>
+            <img src="https://i.pravatar.cc/300?img=68" alt="">
+            <p>JavaScript is prototype-based, <span class="hl">multi-paradigm</span>, single-threaded, dynamic, and supports functional, imperative, and object-oriented styles.</p>
+          </div>
+          <div class="card" data-reveal>
+            <img src="https://i.pravatar.cc/300?img=59" alt="">
+            <p>JavaScript engines power everything from <span class="hl">websites</span> to servers, mobile apps, games, and even AI-driven platforms.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT: infobox -->
+      <aside class="infobox">
+        <div class="infobox-title">JavaScript</div>
+        <div class="infobox-cover">
+          <div class="silhouette"></div>
+          <div class="mbd-mark">MBD</div>
+        </div>
+        <div class="infobox-row"><div class="k">Paradigm</div><div class="v"><a href="#">Multi-paradigm</a>: functional, imperative, object-oriented</div></div>
+        <div class="infobox-row"><div class="k">Designed by</div><div class="v"><a href="#">Brendan Eich</a></div></div>
+        <div class="infobox-row"><div class="k">First appeared</div><div class="v">December 4, 1995; 29 years ago</div></div>
+        <div class="infobox-row"><div class="k">Typing discipline</div><div class="v"><a href="#">Dynamic, weak, duck</a></div></div>
+        <div class="infobox-row"><div class="k">Memory management</div><div class="v"><a href="#">Automatic garbage collection</a></div></div>
+        <div class="infobox-row"><div class="k">Filename extensions</div><div class="v">.js, .mjs, .cjs</div></div>
+        <div class="infobox-row"><div class="k">Website</div><div class="v"><a href="#">developer.mbd.org &#8599;</a></div></div>
+        <div class="infobox-row"><div class="k">Major implementations</div><div class="v"><a href="#">V8</a>, <a href="#">SpiderMonkey</a>, <a href="#">JavaScriptCore</a>, <a href="#">Chakra</a></div></div>
+        <div class="infobox-row"><div class="k">Influenced by</div><div class="v"><a href="#">Self</a>, <a href="#">Scheme</a>, <a href="#">Java</a>, <a href="#">Awk</a>, <a href="#">HyperTalk</a></div></div>
+        <div class="infobox-row"><div class="k">Influenced</div><div class="v"><a href="#">TypeScript</a>, <a href="#">CoffeeScript</a>, <a href="#">Dart</a>, many others</div></div>
+      </aside>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Toggle switch
+  document.getElementById('themeToggle').addEventListener('click', function(){
+    this.classList.toggle('off');
+  });
+
+  // Scroll-reveal for cards
+  const cards = document.querySelectorAll('[data-reveal]');
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('reveal'); });
+  }, { threshold: 0.15 });
+  cards.forEach(c => io.observe(c));
+
+  // Live filter: search box dims cards that don't match
+  const input = document.getElementById('searchInput');
+  input.addEventListener('input', () => {
+    const q = input.value.trim().toLowerCase();
+    cards.forEach(c => {
+      const match = !q || c.textContent.toLowerCase().includes(q);
+      c.style.opacity = match ? '1' : '0.25';
+    });
+  });
+</script>
+
+</body>
+</html>
